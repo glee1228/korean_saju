@@ -105,6 +105,50 @@ def test_yaja_si_separated_boundary(solar_terms) -> None:
     assert saju_single.day_pillar.index == (saju_separated.day_pillar.index + 1) % 60
 
 
+def test_kst_past_midnight_yaja_si_uses_ast_date(solar_terms) -> None:
+    """KST는 자정 넘었지만 AST는 어제인 경우 — 일주가 AST date 기준이어야.
+
+    Regression for 0.1.1: 이전엔 KST date를 일주 기준으로 써서 하루 어긋남.
+    KST 1990-01-02 00:10 서울 → AST 1990-01-01 23:37 (야자시 영역)
+    """
+    birth = datetime(1990, 1, 2, 0, 10)
+
+    separated = Saju.from_birth(
+        kst_moment=birth, solar_terms=solar_terms, yaja_si_separated=True
+    )
+    single = Saju.from_birth(
+        kst_moment=birth, solar_terms=solar_terms, yaja_si_separated=False
+    )
+
+    # 분리법: AST 당일(1990-01-01) 일주.
+    assert separated.day_pillar.hanja == "丙寅", f"got {separated.day_pillar.hanja}"
+    # 단일자시: AST 다음날(1990-01-02) 일주.
+    assert single.day_pillar.hanja == "丁卯", f"got {single.day_pillar.hanja}"
+
+    # 시주 자시는 두 모드 공통 — 다음날(1990-01-02 丁卯) 일간 기준 五鼠遁 → 丁日 자시 = 庚子.
+    assert separated.hour_pillar == single.hour_pillar
+    assert separated.hour_pillar.hanja == "庚子"
+
+
+def test_jojashi_ast_zero_hour(solar_terms) -> None:
+    """조자시(AST 00:00–01:00) — 분리법·단일 모두 AST 다음날 일주로 동일."""
+    # KST 1990-01-01 01:10 서울 → AST 1990-01-01 00:38 (조자시).
+    birth = datetime(1990, 1, 1, 1, 10)
+
+    separated = Saju.from_birth(
+        kst_moment=birth, solar_terms=solar_terms, yaja_si_separated=True
+    )
+    single = Saju.from_birth(
+        kst_moment=birth, solar_terms=solar_terms, yaja_si_separated=False
+    )
+    # 조자시는 모드 무관 동일 (AST가 이미 자정 넘은 상태라 자연 처리).
+    assert separated.day_pillar == single.day_pillar
+    assert separated.hour_pillar == single.hour_pillar
+    # 1990-01-01 → 丙寅. 시주 = 丙日 자시 = 戊子.
+    assert separated.day_pillar.hanja == "丙寅"
+    assert separated.hour_pillar.hanja == "戊子"
+
+
 def test_yaja_si_no_op_for_non_boundary_time(solar_terms) -> None:
     """진태양시가 23시 아닐 때는 yaja_si_separated 옵션이 결과에 영향 없어야 함."""
     birth = datetime(1990, 6, 15, 10, 0)  # 오시(午時)

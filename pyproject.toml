@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "korean-saju"
-version = "0.1.0"
+version = "0.1.1"
 description = "한국 전통 사주(四柱) 만세력 — 야자시/조자시 분리법 지원, KASI 절기·음력 데이터 임베드, 순수 Python."
 readme = "README.md"
 requires-python = ">=3.11"

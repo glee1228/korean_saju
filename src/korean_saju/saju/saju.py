@@ -67,42 +67,61 @@ class Saju:
             hour_known: False면 ``hour_pillar=None``. 3주만 의미 있음.
             yaja_si_separated: 야자시(夜子時) 분리법 토글.
 
-        **야자시(夜子時) — 한국 명리 표준 분리법, boundary = 진태양시 23:00**
+        **자시(子時) 영역 — 모두 진태양시(AST) 기준**
 
-        - 진태양시 23:00–24:00 = 야자시 영역.
-        - 시주(時柱)는 항상 다음날 일간 기준으로 五鼠遁 (子時는 새 사이클).
-        - 일주(日柱)는 ``yaja_si_separated``에 따라 분기:
-            - True (야자시 분리법, **기본**): 일주 = **그날** (자정 안 지났음)
-            - False (정자시 단일·일자시): 일주 = **다음날** (자정 후처럼 처리)
+        - **야자시(夜子時)**: AST 23:00–24:00 (당일 자시 영역).
+        - **조자시(朝子時)**: AST 00:00–01:00 (다음날 자시 영역).
+        - 시주 자시는 두 경우 모두 **다음날 일간** 五鼠遁
+          (야자시 다음날 일간 = 조자시 그날 일간으로 동일).
 
-        예: 1994-04-28 23:40 KST 서울(−32분) → 진태양시 23:08
-            - ``yaja_si_separated=True`` → 갑신일 + 병자시 (을 일간 자시)
+        **일주(日柱)** 처리 — ``yaja_si_separated``에 따라 분기:
+
+        - True (분리법, 한국 명리 표준, **기본**):
+          야자시는 AST 당일 일주, 조자시는 자연스럽게 AST 다음날 일주.
+        - False (정자시 단일·일자시): 야자시도 다음날 일주로 통합.
+
+        일주·시주는 **AST 캘린더 날짜** 기준으로 계산해야 한다. KST 날짜
+        기준으로 하면 longitude 보정으로 KST는 자정을 넘었지만 AST는 아직
+        어제인 경우 (예: KST 1990-01-02 00:10 서울 → AST 23:38) 일주가
+        하루 어긋난다.
+
+        예: 1994-04-28 23:40 KST 서울(−32분) → AST 23:08 (야자시)
+            - ``yaja_si_separated=True``  → 갑신일 + 병자시
             - ``yaja_si_separated=False`` → 을유일 + 병자시
         """
+        # 연주·월주는 절대 시각(UTC) 기준 — KST moment 그대로.
         year = YearPillar.for_kst_moment(kst_moment, solar_terms)
         month = MonthPillar.for_kst_moment(kst_moment, year, solar_terms)
 
-        # 야자시 검사: 진태양시 기준 (시주 결정과 동일 기준). boundary = 23:00.
+        # 일주·시주는 AST 기준.
         ast = SolarTimeCorrection.to_apparent_solar_time(kst_moment, longitude=longitude)
-        is_after_2300 = ast.hour == 23
+        ast_date = datetime(ast.year, ast.month, ast.day)
 
-        # 일주: yaja_si_separated 분기.
-        if is_after_2300 and not yaja_si_separated:
-            date_for_day = kst_moment + timedelta(days=1)
+        # 자시(子時) 영역 판별 (AST 기준).
+        is_yaja_si = ast.hour == 23  # AST 23:00–23:59
+        # 조자시(AST 00:00–00:59)는 ast_date가 이미 다음날을 가리키므로 별도 분기 불필요.
+
+        # 일주: 야자시 + 단일자시 모드에서만 다음날로 advance.
+        #   - 분리법(기본): 항상 AST 캘린더 날짜 그대로.
+        #   - 단일자시: 야자시도 강제로 다음날로 통합.
+        if is_yaja_si and not yaja_si_separated:
+            date_for_day = ast_date + timedelta(days=1)
         else:
-            date_for_day = kst_moment
+            date_for_day = ast_date
         day = DayPillar.for_date(date_for_day)
 
-        # 시주: 진태양시 23:00 이후면 항상 다음날 일간 기준 (子時 새 사이클).
+        # 시주: 자시는 항상 다음날 일간 五鼠遁.
+        #   - 야자시: AST 당일 + 1 = 다음날 일간
+        #   - 조자시: 일주가 이미 AST 다음날 = 동일한 일간
         hour: GanJi | None = None
         if hour_known:
-            if is_after_2300:
-                day_for_hour = DayPillar.for_date(kst_moment + timedelta(days=1))
+            if is_yaja_si:
+                hour_day_pillar = DayPillar.for_date(ast_date + timedelta(days=1))
             else:
-                day_for_hour = day
+                hour_day_pillar = day
             hour = HourPillar.for_kst_moment(
                 kst_moment=kst_moment,
-                day_pillar=day_for_hour,
+                day_pillar=hour_day_pillar,
                 longitude=longitude,
             )
 

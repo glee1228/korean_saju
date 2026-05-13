@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.1 — 2026-05-14
+
+### Fixed
+
+- **일주·시주 계산이 AST(진태양시) 캘린더 날짜 기준으로 동작**하도록 수정.
+  이전엔 KST 날짜를 기준으로 써서, longitude 보정으로 KST는 자정을 넘었지만
+  AST는 아직 어제인 경우 (예: KST 1990-01-02 00:10 서울 → AST 1990-01-01 23:37)
+  일주가 하루 어긋났음.
+- 자시(子時) 영역 분기를 명시적으로 분리:
+  - **야자시(夜子時)**: AST 23:00–24:00 — 당일 자시 영역
+  - **조자시(朝子時)**: AST 00:00–01:00 — 다음날 자시 영역 (자연 처리)
+  - 시주 자시는 두 경우 모두 다음날 일간 기준 五鼠遁.
+
+### Tests
+
+- `test_kst_past_midnight_yaja_si_uses_ast_date` — 회귀 테스트 추가.
+- `test_jojashi_ast_zero_hour` — 조자시 케이스 명시 검증.
+
 ## 0.1.0 — 2026-05-14
 
 Initial release. Ported from a precision-validated Dart implementation.
