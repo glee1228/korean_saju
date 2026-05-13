@@ -1,5 +1,11 @@
 # korean-saju
 
+[![PyPI](https://img.shields.io/pypi/v/korean-saju.svg)](https://pypi.org/project/korean-saju/)
+[![Python](https://img.shields.io/pypi/pyversions/korean-saju.svg)](https://pypi.org/project/korean-saju/)
+[![License](https://img.shields.io/pypi/l/korean-saju.svg)](LICENSE)
+[![Verified](https://img.shields.io/badge/KASI%201867%20anchors-100%25-success)](#accuracy)
+[![Verified](https://img.shields.io/badge/35%2C000%20일별%20vs%20lunar--python-100%25-success)](#accuracy)
+
 한국 전통 사주(四柱) 만세력 — 야자시/조자시 분리법, 진태양시 보정, KASI 절기·음력 데이터 임베드.
 
 > **사주(四柱)는 사실(fact), 해석은 의견(opinion).**
@@ -116,7 +122,11 @@ SolarTimeCorrection.minutes_offset_from_kst(129.08)    # 부산 → -23.68분
 
 ## Accuracy
 
-본 라이브러리는 **한국천문연구원(KASI) 공식 데이터**를 임베드하고, 데이터 범위 밖은 Meeus 천문 계산기로 보충한다. 모든 알고리즘은 1867개 음력 월 KASI 전수 검증 + 339개 단위 테스트를 통과한 Dart 구현을 1:1 포팅했다.
+본 라이브러리는 **한국천문연구원(KASI) 공식 데이터**를 임베드하고, 데이터 범위 밖은 Meeus 천문 계산기로 보충한다.
+
+> 🎯 **35,000개 양력 일자 100% 일치** (1900–2050, `lunar-python` 패키지 교차 검증)
+> 🎯 **1,867개 KASI 음력 월 anchor 100% 일치** (한국천문연구원 표준값)
+> 🎯 일주·시주는 **분 단위 정확도**, 진태양시(AST) 캘린더 기반 (0.1.1)
 
 ### 데이터 소스별 정밀도
 
@@ -128,18 +138,21 @@ SolarTimeCorrection.minutes_offset_from_kst(129.08)    # 부산 → -23.68분
 | 진태양시(AST) 보정 | — | 경도 4분/1° 정밀, 균시차 미적용 (명리 표준) | KST 동경 135° 기준 |
 | ΔT (Terrestrial Time) | 1900–2150 | **≤ 0.5초** | Espenak/Meeus 다항식 (NASA Eclipse Web Site) |
 
-### 교차 검증 결과 (Dart 원본 프로젝트)
+### 교차 검증 결과
 
 | 검증 항목 | 케이스 수 | 결과 |
 |---|---|---|
-| 양력 → 음력 변환 (vs `lunar` Dart pkg) | 25 | **23/25 일치** (불일치 2건은 lunar pkg 측 1일 오차 — KASI/한국 표준 우선) |
-| 일진(日辰) 60갑자 | 25 | **25/25 일치** (100%) |
-| 세차(歲次) 60갑자 | 25 | **25/25 일치** (100%) |
+| **일주(日柱) — KASI 1867개 음력 월 전수** (`tools/verify_daypillar.py`) | **1,867** | **1867/1867 (100.0000%)** ✓ |
+| **일주(日柱) — 1900–2050 35,000개 양력 일자 vs `lunar-python`** | **35,000** | **35,000/35,000 (100.0000%)** ✓ |
+| 양력 → 음력 변환 (Dart, vs `lunar` pkg) | 25 | 23/25 일치 (불일치 2건은 lunar pkg 측 1일 오차) |
+| 일진(日辰) 60갑자 (Dart, vs `lunar` pkg) | 25 | **25/25** (100%) |
+| 세차(歲次) 60갑자 (Dart, vs `lunar` pkg) | 25 | **25/25** (100%) |
 | 24절기 KASI vs lunar pkg | 120 | 평균 차이 27초, 95th 32초 |
 | 24절기 KASI vs Meeus (자체) | 120 | 평균 차이 4.5분, 95th 9분 |
-| 일주(日柱) — KASI 음력 1867개 월 1일 vs 우리 Julian Day 계산 | 1867 | **1867/1867 일치** (100%, 전수) |
 | Dart 단위 테스트 (계산 + 분석 전체) | — | **339/339 통과** |
 | Python smoke tests (이 패키지) | — | **12/12 통과** |
+
+> 35,000건 무작위 양력 일자 비교는 `tools/verify_daypillar.py`로 재현 가능 — `pip install lunar-python && python tools/verify_daypillar.py`. seed 42 고정. 1900-01-31 ~ 2050-12-14 (55,104일) 범위에서 무작위 추출.
 
 ### 정밀도 설계 원칙
 
