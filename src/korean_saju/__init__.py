@@ -120,7 +120,7 @@ __all__ = [
     "load_bundled_data",
 ]
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 
 def load_bundled_data() -> tuple[KasiLunarData, SolarTermSource]:

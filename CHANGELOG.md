@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.2 — 2026-05-14
+
+Docs / verification release (no code changes).
+
+### Added
+
+- **`tools/verify_daypillar.py`** — 재현 가능한 정밀도 검증 스크립트
+  - **KASI 1867개 음력 월 anchor 전수**: 1867/1867 (100.0000%)
+  - **1900–2050 35,000개 무작위 양력 일자 vs `lunar-python`**: 35,000/35,000 (100.0000%)
+- README 상단 highlight 배지 5개 + 정확도 섹션 검증 테이블 확장
+- 명시적 한계 섹션 (Meeus boundary 오차, 균시차 미적용 등)
+
 ## 0.1.1 — 2026-05-14
 
 ### Fixed
