@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "korean-saju"
+version = "0.1.0"
+description = "한국 전통 사주(四柱) 만세력 — 야자시/조자시 분리법 지원, KASI 절기·음력 데이터 임베드, 순수 Python."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "glee1228" }]
+keywords = ["saju", "manseryeok", "사주", "만세력", "korean", "astrology", "lunar", "yajashi", "야자시", "조자시"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Astronomy",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/glee1228/korean_saju"
+Issues = "https://github.com/glee1228/korean_saju/issues"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/korean_saju"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/korean_saju/data/kasi_lunar_1900_2050.json" = "korean_saju/data/kasi_lunar_1900_2050.json"
+"src/korean_saju/data/kasi_solar_terms_2000_2027.json" = "korean_saju/data/kasi_solar_terms_2000_2027.json"
+
+[tool.hatch.build.targets.sdist]
+include = ["src/korean_saju", "tests", "examples", "README.md", "LICENSE", "CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "RUF"]
+ignore = ["E501"]
